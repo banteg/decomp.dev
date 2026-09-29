@@ -817,4 +817,23 @@ pub async fn delete_commit(
 }
 
 #[cfg(test)]
-mod tests;
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_validate_category() {
+        let categories = ["game", "game/engine"]
+            .map(|id| ReportCategory { id: id.into(), ..Default::default() });
+        let cases: &[(Option<&str>, Option<&str>, &[ReportCategory], Option<Option<&str>>)] = &[
+            (Some("game/engine"), None, &categories, Some(Some("game/engine"))),
+            (Some(""), Some("game"), &categories, Some(None)),
+            (None, Some("game"), &categories, Some(Some("game"))),
+            (Some("game"), Some("game"), &[], Some(None)),
+            (Some("unknown"), None, &categories, None),
+        ];
+        for &(submitted, previous, categories, expected) in cases {
+            let result = validate_category(submitted, previous, categories).ok();
+            assert_eq!(result.as_ref().map(Option::as_deref), expected);
+        }
+    }
+}
